@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Journal</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📔 Personal Journal</h1>
+            <p class="subtitle">Your private space for thoughts and reflections</p>
+        </header>
+
+        <!-- New Entry Form -->
+        <div class="entry-form-container">
+            <h2 id="form-title">New Entry</h2>
+            <form id="entry-form">
+                <input type="text" id="entry-title" placeholder="Entry title..." required>
+                <textarea id="entry-content" placeholder="Write your thoughts here..." required></textarea>
+                <div class="form-buttons">
+                    <button type="submit" id="submit-btn">Save Entry</button>
+                    <button type="button" id="cancel-btn" style="display: none;">Cancel</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Entries List -->
+        <div class="entries-container">
+            <h2>Your Entries</h2>
+            <div id="entries-list">
+                <p class="loading">Loading entries...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-modal" class="modal">
+        <div class="modal-content">
+            <h3>Confirm Deletion</h3>
+            <p>Are you sure you want to delete this entry? This action cannot be undone.</p>
+            <p class="warning-text">Type <strong>DELETE</strong> to confirm:</p>
+            <input type="text" id="delete-confirm-input" placeholder="Type DELETE here">
+            <div class="modal-buttons">
+                <button id="confirm-delete-btn" class="btn-danger" disabled>Delete Entry</button>
+                <button id="cancel-delete-btn" class="btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
