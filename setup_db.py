@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Database setup script for the Personal Journal app.
-This script creates the database and initializes the schema.
+This script creates the database and initializes the schema for YugabyteDB.
 """
 
 import psycopg2
@@ -9,12 +9,12 @@ from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 import os
 import sys
 
-# Database configuration
+# Database configuration for YugabyteDB
 DB_CONFIG = {
     'host': 'localhost',
-    'port': 5432,
-    'user': os.getenv('DB_USER', 'postgres'),
-    'password': os.getenv('DB_PASSWORD', 'postgres')
+    'port': int(os.getenv('DB_PORT', '5433')),  # YugabyteDB default YSQL port is 5433
+    'user': os.getenv('DB_USER', 'yugabyte'),
+    'password': os.getenv('DB_PASSWORD', 'yugabyte')
 }
 
 DB_NAME = 'journal_db'
@@ -22,8 +22,10 @@ DB_NAME = 'journal_db'
 def create_database():
     """Create the journal database if it doesn't exist"""
     try:
-        # Connect to PostgreSQL server (default postgres database)
-        conn = psycopg2.connect(**DB_CONFIG)
+        # Connect to YugabyteDB server (connect to default 'yugabyte' database to create new database)
+        default_db_config = DB_CONFIG.copy()
+        default_db_config['database'] = 'yugabyte'  # Connect to default database first
+        conn = psycopg2.connect(**default_db_config)
         conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
         cur = conn.cursor()
         
@@ -64,16 +66,17 @@ def create_database():
         print("\nDatabase setup complete! You can now run the Flask app.")
         
     except psycopg2.OperationalError as e:
-        print(f"✗ Error connecting to PostgreSQL: {e}")
+        print(f"✗ Error connecting to YugabyteDB: {e}")
         print("\nPlease ensure:")
-        print("1. PostgreSQL is running on localhost:5432")
-        print("2. Database credentials are correct")
-        print("3. You can set DB_USER and DB_PASSWORD environment variables if needed")
+        print("1. YugabyteDB cluster is running and accessible")
+        print("2. YSQL API is enabled on localhost:5433 (default port)")
+        print("3. Database credentials are correct")
+        print("4. You can set DB_USER, DB_PASSWORD, and DB_PORT environment variables if needed")
         sys.exit(1)
     except Exception as e:
         print(f"✗ Error setting up database: {e}")
         sys.exit(1)
 
 if __name__ == '__main__':
-    print("Setting up Personal Journal database...")
+    print("Setting up Personal Journal database on YugabyteDB...")
     create_database()

@@ -6,13 +6,13 @@ import os
 
 app = Flask(__name__)
 
-# Database configuration
+# Database configuration for YugabyteDB
 DB_CONFIG = {
     'host': 'localhost',
-    'port': 5432,
+    'port': int(os.getenv('DB_PORT', '5433')),  # YugabyteDB default YSQL port is 5433
     'database': 'journal_db',
-    'user': os.getenv('DB_USER', 'postgres'),
-    'password': os.getenv('DB_PASSWORD', 'postgres')
+    'user': os.getenv('DB_USER', 'yugabyte'),
+    'password': os.getenv('DB_PASSWORD', 'yugabyte')
 }
 
 def get_db_connection():

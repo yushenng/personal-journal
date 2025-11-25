@@ -9,12 +9,12 @@ A beautiful, single-user personal journal web application with a soothing gradie
 - ✏️ **Edit Entries** - Update existing entries anytime
 - 🗑️ **Delete Entries** - Remove entries with confirmation (type "DELETE" to confirm)
 - 🎨 **Beautiful UI** - Soothing animated gradient background
-- 💾 **PostgreSQL Storage** - All data persisted to PostgreSQL database
+- 💾 **YugabyteDB Storage** - All data persisted to YugabyteDB cluster
 
 ## Requirements
 
 - Python 3.7+
-- PostgreSQL running on localhost:5432
+- YugabyteDB cluster running with YSQL API enabled (default port: 5433)
 - pip (Python package manager)
 
 ## Setup Instructions
@@ -25,9 +25,9 @@ A beautiful, single-user personal journal web application with a soothing gradie
 pip install -r requirements.txt
 ```
 
-### 2. Set Up PostgreSQL Database
+### 2. Set Up YugabyteDB Database
 
-The app expects PostgreSQL to be running on `localhost:5432`. 
+The app expects YugabyteDB to be running with YSQL API accessible on `localhost:5433` (default port). 
 
 **Option A: Automatic Setup (Recommended)**
 ```bash
@@ -36,20 +36,21 @@ python setup_db.py
 
 **Option B: Manual Setup**
 ```bash
-# Connect to PostgreSQL
-psql -U postgres
+# Connect to YugabyteDB using ysqlsh
+ysqlsh -U yugabyte -h localhost -p 5433
 
 # Create database
 CREATE DATABASE journal_db;
 
-# Exit psql
+# Exit ysqlsh
 \q
 ```
 
-**Note:** If your PostgreSQL uses different credentials, set environment variables:
+**Note:** If your YugabyteDB uses different credentials or port, set environment variables:
 ```bash
 export DB_USER=your_username
 export DB_PASSWORD=your_password
+export DB_PORT=your_port  # Default is 5433
 ```
 
 ### 3. Run the Application
@@ -83,17 +84,18 @@ The app uses a single table `journal_entries` with the following structure:
 
 Default database connection settings:
 - Host: `localhost`
-- Port: `5432`
+- Port: `5433` (YugabyteDB YSQL default port, or `DB_PORT` env variable)
 - Database: `journal_db`
-- User: `postgres` (or `DB_USER` env variable)
-- Password: `postgres` (or `DB_PASSWORD` env variable)
+- User: `yugabyte` (or `DB_USER` env variable)
+- Password: `yugabyte` (or `DB_PASSWORD` env variable)
 
 ## Troubleshooting
 
 **Database Connection Error:**
-- Ensure PostgreSQL is running: `sudo systemctl status postgresql` (Linux) or check your PostgreSQL service
-- Verify connection details match your PostgreSQL setup
-- Check if PostgreSQL is listening on port 5432: `netstat -an | grep 5432`
+- Ensure YugabyteDB cluster is running and YSQL API is enabled
+- Verify connection details match your YugabyteDB setup
+- Check if YugabyteDB YSQL is listening on port 5433: `netstat -an | grep 5433` or `ss -tlnp | grep 5433`
+- Verify you can connect using ysqlsh: `ysqlsh -U yugabyte -h localhost -p 5433`
 
 **Port Already in Use:**
 - Change the port in `app.py` (last line): `app.run(debug=True, host='0.0.0.0', port=5001)`
