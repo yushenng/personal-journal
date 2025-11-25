@@ -63,7 +63,11 @@ function displayEntries(entries) {
         return;
     }
 
-    entriesList.innerHTML = entries.map(entry => `
+    entriesList.innerHTML = entries.map(entry => createEntryHTML(entry)).join('');
+}
+
+function createEntryHTML(entry) {
+    return `
         <div class="entry-card" data-id="${entry.id}">
             <div class="entry-header">
                 <div class="entry-title">${escapeHtml(entry.title)}</div>
@@ -75,7 +79,27 @@ function displayEntries(entries) {
                 <button class="btn-delete" onclick="showDeleteModal(${entry.id})">Delete</button>
             </div>
         </div>
-    `).join('');
+    `;
+}
+
+function addEntryToList(entry) {
+    const entriesList = document.getElementById('entries-list');
+    
+    // Remove empty state message if present
+    if (entriesList.querySelector('.empty-state')) {
+        entriesList.innerHTML = '';
+    }
+    
+    // Add new entry at the top
+    const entryHTML = createEntryHTML(entry);
+    entriesList.insertAdjacentHTML('afterbegin', entryHTML);
+}
+
+function updateEntryInList(entry) {
+    const entryCard = document.querySelector(`.entry-card[data-id="${entry.id}"]`);
+    if (entryCard) {
+        entryCard.outerHTML = createEntryHTML(entry);
+    }
 }
 
 async function handleFormSubmit(e) {
@@ -88,6 +112,11 @@ async function handleFormSubmit(e) {
         alert('Please fill in both title and content.');
         return;
     }
+
+    const submitBtn = document.getElementById('submit-btn');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Saving...';
 
     try {
         let response;
@@ -114,24 +143,54 @@ async function handleFormSubmit(e) {
         const data = await response.json();
 
         if (data.success) {
+            // Update UI directly instead of reloading all entries
+            if (editingEntryId) {
+                // Update existing entry in the list
+                updateEntryInList(data.entry);
+            } else {
+                // Add new entry to the top of the list
+                addEntryToList(data.entry);
+            }
+            
             // Reset form
             document.getElementById('entry-form').reset();
             editingEntryId = null;
             document.getElementById('form-title').textContent = 'New Entry';
             document.getElementById('cancel-btn').style.display = 'none';
-            
-            // Reload entries
-            loadEntries();
         } else {
             alert('Error: ' + data.error);
         }
     } catch (error) {
         alert('Error saving entry: ' + error.message);
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
     }
 }
 
 async function editEntry(entryId) {
     try {
+        // Find entry from the DOM instead of fetching all entries
+        const entryCard = document.querySelector(`.entry-card[data-id="${entryId}"]`);
+        if (entryCard) {
+            const titleElement = entryCard.querySelector('.entry-title');
+            const contentElement = entryCard.querySelector('.entry-content');
+            
+            if (titleElement && contentElement) {
+                // Populate form with entry data from DOM
+                document.getElementById('entry-title').value = titleElement.textContent.trim();
+                document.getElementById('entry-content').value = contentElement.textContent.trim();
+                editingEntryId = entryId;
+                document.getElementById('form-title').textContent = 'Edit Entry';
+                document.getElementById('cancel-btn').style.display = 'inline-block';
+                
+                // Scroll to form
+                document.querySelector('.entry-form-container').scrollIntoView({ behavior: 'smooth' });
+                return;
+            }
+        }
+        
+        // Fallback: fetch all entries if DOM lookup fails
         const response = await fetch('/api/entries');
         const data = await response.json();
 
@@ -192,7 +251,20 @@ async function confirmDelete() {
 
         if (data.success) {
             closeDeleteModal();
-            loadEntries();
+            // Remove entry from DOM directly instead of reloading all entries
+            const entryCard = document.querySelector(`.entry-card[data-id="${deletingEntryId}"]`);
+            if (entryCard) {
+                entryCard.remove();
+                
+                // Show empty state if no entries remain
+                const entriesList = document.getElementById('entries-list');
+                if (entriesList.children.length === 0) {
+                    entriesList.innerHTML = '<p class="empty-state">No entries yet. Start writing your first journal entry!</p>';
+                }
+            } else {
+                // Fallback: reload if DOM update fails
+                loadEntries();
+            }
         } else {
             alert('Error deleting entry: ' + data.error);
         }

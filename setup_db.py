@@ -58,11 +58,22 @@ def create_database():
             )
         """)
         
+        # Create indexes for better query performance
+        cur.execute("""
+            CREATE INDEX IF NOT EXISTS idx_journal_entries_created_at 
+            ON journal_entries(created_at DESC)
+        """)
+        
+        cur.execute("""
+            CREATE INDEX IF NOT EXISTS idx_journal_entries_updated_at 
+            ON journal_entries(updated_at DESC)
+        """)
+        
         conn.commit()
         cur.close()
         conn.close()
         
-        print(f"✓ Schema initialized successfully")
+        print(f"✓ Schema initialized successfully with indexes")
         print("\nDatabase setup complete! You can now run the Flask app.")
         
     except psycopg2.OperationalError as e:
